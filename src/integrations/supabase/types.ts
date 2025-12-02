@@ -14,7 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      fitness_plans: {
+        Row: {
+          activity_level: string | null
+          age: number | null
+          bmi: number | null
+          bmi_category: string | null
+          created_at: string
+          diet_plan: Json | null
+          diet_preferences: string[] | null
+          equipment: string | null
+          exercises: Json | null
+          gender: string | null
+          goal: string | null
+          height: number | null
+          id: string
+          name: string | null
+          notes: Json | null
+          user_id: string
+          weight: number | null
+        }
+        Insert: {
+          activity_level?: string | null
+          age?: number | null
+          bmi?: number | null
+          bmi_category?: string | null
+          created_at?: string
+          diet_plan?: Json | null
+          diet_preferences?: string[] | null
+          equipment?: string | null
+          exercises?: Json | null
+          gender?: string | null
+          goal?: string | null
+          height?: number | null
+          id?: string
+          name?: string | null
+          notes?: Json | null
+          user_id: string
+          weight?: number | null
+        }
+        Update: {
+          activity_level?: string | null
+          age?: number | null
+          bmi?: number | null
+          bmi_category?: string | null
+          created_at?: string
+          diet_plan?: Json | null
+          diet_preferences?: string[] | null
+          equipment?: string | null
+          exercises?: Json | null
+          gender?: string | null
+          goal?: string | null
+          height?: number | null
+          id?: string
+          name?: string | null
+          notes?: Json | null
+          user_id?: string
+          weight?: number | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
