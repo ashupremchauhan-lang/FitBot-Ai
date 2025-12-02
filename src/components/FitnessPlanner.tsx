@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Dumbbell, Activity, Apple, Heart, Sparkles } from "lucide-react";
+import { Dumbbell, Activity, Apple, Heart, Sparkles, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import type { User } from "@supabase/supabase-js";
 
 interface FitnessPlan {
   bmi: number;
@@ -16,7 +19,19 @@ interface FitnessPlan {
   notes: string[];
 }
 
-export const FitnessPlanner = () => {
+interface FitnessPlannerProps {
+  user?: User | null;
+}
+
+const DIET_OPTIONS = [
+  { id: "veg", label: "Vegetarian" },
+  { id: "nonveg", label: "Non-Vegetarian" },
+  { id: "vegan", label: "Vegan" },
+  { id: "keto", label: "Keto" },
+  { id: "paleo", label: "Paleo" },
+];
+
+export const FitnessPlanner = ({ user }: FitnessPlannerProps) => {
   const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
@@ -26,12 +41,13 @@ export const FitnessPlanner = () => {
     weight: "",
     activityLevel: "moderate",
     goal: "maintain",
-    dietPreference: "veg",
+    dietPreferences: ["veg"],
     equipment: "",
   });
 
   const [plan, setPlan] = useState<FitnessPlan | null>(null);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const calculateBMI = (weight: number, height: number) => {
     const heightM = height / 100;
@@ -43,6 +59,15 @@ export const FitnessPlanner = () => {
     if (bmi < 25) return "Healthy";
     if (bmi < 30) return "Overweight";
     return "Obese";
+  };
+
+  const toggleDietPreference = (dietId: string) => {
+    setFormData(prev => {
+      const newPrefs = prev.dietPreferences.includes(dietId)
+        ? prev.dietPreferences.filter(p => p !== dietId)
+        : [...prev.dietPreferences, dietId];
+      return { ...prev, dietPreferences: newPrefs.length > 0 ? newPrefs : ["veg"] };
+    });
   };
 
   const generatePlan = () => {
@@ -65,7 +90,7 @@ export const FitnessPlanner = () => {
       const bmi = parseFloat(calculateBMI(weight, height));
       const category = getBMICategory(bmi);
 
-      // Exercise recommendations based on equipment
+      // Exercise recommendations
       const equipment = formData.equipment.toLowerCase();
       let exercises: string[] = [];
 
@@ -79,38 +104,49 @@ export const FitnessPlanner = () => {
         exercises.push("Push-Ups", "Bodyweight Squats", "Planks", "Lunges", "Mountain Climbers");
       }
 
-      // Add goal-specific exercises
       if (formData.goal === "lose") {
         exercises.push("Jump Rope", "Burpees", "High Knees");
       } else if (formData.goal === "gain") {
         exercises.push("Progressive Overload Lifts", "Compound Movements");
       }
 
-      // Diet recommendations
+      // Diet recommendations based on selected preferences
       const diet: string[] = [];
-      const isVeg = formData.dietPreference === "veg";
+      const hasVeg = formData.dietPreferences.includes("veg");
+      const hasNonVeg = formData.dietPreferences.includes("nonveg");
+      const hasVegan = formData.dietPreferences.includes("vegan");
+      const hasKeto = formData.dietPreferences.includes("keto");
 
       if (formData.goal === "gain") {
-        diet.push(
-          isVeg ? "Breakfast: Paneer bhurji + Whole wheat bread + Milk" : "Breakfast: Omelette + Whole wheat bread + Milk",
-          isVeg ? "Lunch: Rajma + Brown rice + Ghee" : "Lunch: Brown rice + Grilled Chicken + Veggies",
-          "Snack: Dry fruits + Smoothie",
-          isVeg ? "Dinner: Paneer tikka + Roti + Salad" : "Dinner: Chicken curry + Roti + Salad"
-        );
+        if (hasNonVeg) {
+          diet.push("Breakfast: Omelette + Whole wheat bread + Milk", "Lunch: Brown rice + Grilled Chicken + Veggies");
+        }
+        if (hasVeg || hasVegan) {
+          diet.push("Breakfast: Paneer bhurji + Whole wheat bread", "Lunch: Rajma + Brown rice + Ghee");
+        }
+        if (hasKeto) {
+          diet.push("Breakfast: Eggs + Avocado + Cheese", "Lunch: Grilled meat + Leafy greens + Olive oil");
+        }
+        diet.push("Snack: Dry fruits + Smoothie", "Dinner: High-protein meal + Salad");
       } else if (formData.goal === "lose") {
-        diet.push(
-          isVeg ? "Breakfast: Oats + Banana + Green tea" : "Breakfast: Boiled eggs + Oats + Green tea",
-          isVeg ? "Lunch: Moong dal + Brown rice + Veggies" : "Lunch: Grilled fish + Brown rice + Salad",
-          "Snack: Roasted chana + Buttermilk",
-          isVeg ? "Dinner: Soup + Salad + Light dal" : "Dinner: Clear soup + Veg sauté + Chicken breast"
-        );
+        if (hasNonVeg) {
+          diet.push("Breakfast: Boiled eggs + Oats", "Lunch: Grilled fish + Brown rice + Salad");
+        }
+        if (hasVeg || hasVegan) {
+          diet.push("Breakfast: Oats + Banana + Green tea", "Lunch: Moong dal + Brown rice + Veggies");
+        }
+        if (hasKeto) {
+          diet.push("Breakfast: Eggs + Spinach + Butter", "Lunch: Grilled protein + Cauliflower rice");
+        }
+        diet.push("Snack: Roasted chana + Buttermilk", "Dinner: Light soup + Salad");
       } else {
-        diet.push(
-          isVeg ? "Breakfast: Upma/Poha + Milk" : "Breakfast: Scrambled eggs + Fruits",
-          isVeg ? "Lunch: Khichdi + Curd + Salad" : "Lunch: Mixed dal + Chicken + Veg curry",
-          "Snack: Fresh fruits + Nuts",
-          isVeg ? "Dinner: Roti + Dal + Veg curry" : "Dinner: Paneer tikka + Brown rice + Soup"
-        );
+        if (hasNonVeg) {
+          diet.push("Breakfast: Scrambled eggs + Fruits", "Lunch: Mixed dal + Chicken + Veg curry");
+        }
+        if (hasVeg || hasVegan) {
+          diet.push("Breakfast: Upma/Poha + Milk", "Lunch: Khichdi + Curd + Salad");
+        }
+        diet.push("Snack: Fresh fruits + Nuts", "Dinner: Balanced meal + Vegetables");
       }
 
       // Notes
@@ -120,14 +156,15 @@ export const FitnessPlanner = () => {
         formData.goal === "gain" ? "Add 400-500 kcal/day; focus on protein-rich meals" :
         "Maintain balance with consistent training & nutrition",
         "Stay hydrated - drink 2-3 liters of water daily",
-        "Get 7-8 hours of quality sleep for recovery"
+        "Get 7-8 hours of quality sleep for recovery",
+        `Diet preferences: ${formData.dietPreferences.map(p => DIET_OPTIONS.find(o => o.id === p)?.label).join(", ")}`
       ];
 
       setPlan({
         bmi,
         category,
         exercises: exercises.slice(0, 8),
-        diet,
+        diet: Array.from(new Set(diet)).slice(0, 6),
         notes
       });
 
@@ -143,6 +180,56 @@ export const FitnessPlanner = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const savePlan = async () => {
+    if (!user) {
+      toast({
+        title: "Login Required",
+        description: "Please login to save your fitness plans",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!plan) return;
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.from("fitness_plans").insert({
+        user_id: user.id,
+        name: formData.name || `${formData.goal} Plan`,
+        age: parseInt(formData.age),
+        gender: formData.gender,
+        height: parseFloat(formData.height),
+        weight: parseFloat(formData.weight),
+        activity_level: formData.activityLevel,
+        goal: formData.goal,
+        diet_preferences: formData.dietPreferences,
+        equipment: formData.equipment,
+        bmi: plan.bmi,
+        bmi_category: plan.category,
+        exercises: plan.exercises,
+        diet_plan: plan.diet,
+        notes: plan.notes,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Saved! 💾",
+        description: "Your fitness plan has been saved to history",
+      });
+    } catch (error) {
+      console.error("Save error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save plan",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -270,20 +357,25 @@ export const FitnessPlanner = () => {
               </RadioGroup>
             </div>
 
-            <div className="space-y-2">
-              <Label>Diet Preference</Label>
-              <RadioGroup value={formData.dietPreference} onValueChange={(value) => setFormData({ ...formData, dietPreference: value })}>
-                <div className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="veg" id="veg" />
-                    <Label htmlFor="veg">Vegetarian</Label>
+            <div className="space-y-2 md:col-span-2">
+              <Label>Diet Preferences (Select multiple)</Label>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {DIET_OPTIONS.map((option) => (
+                  <div key={option.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={option.id}
+                      checked={formData.dietPreferences.includes(option.id)}
+                      onCheckedChange={() => toggleDietPreference(option.id)}
+                    />
+                    <Label
+                      htmlFor={option.id}
+                      className="text-sm font-normal cursor-pointer"
+                    >
+                      {option.label}
+                    </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="nonveg" id="nonveg" />
-                    <Label htmlFor="nonveg">Non-Veg</Label>
-                  </div>
-                </div>
-              </RadioGroup>
+                ))}
+              </div>
             </div>
 
             <div className="space-y-2 md:col-span-2">
@@ -315,18 +407,37 @@ export const FitnessPlanner = () => {
       {plan && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <Card className="p-8 shadow-card border-2 border-primary/20">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-12 h-12 rounded-2xl gradient-energy flex items-center justify-center">
-                <Heart className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-2xl gradient-energy flex items-center justify-center">
+                  <Heart className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {formData.name ? `${formData.name}'s ` : "Your "}Fitness Plan
+                  </h2>
+                  <p className={`text-lg font-semibold ${getCategoryColor(plan.category)}`}>
+                    BMI: {plan.bmi} ({plan.category})
+                  </p>
+                </div>
               </div>
-              <div>
-                <h2 className="text-2xl font-bold">
-                  {formData.name ? `${formData.name}'s ` : "Your "}Fitness Plan
-                </h2>
-                <p className={`text-lg font-semibold ${getCategoryColor(plan.category)}`}>
-                  BMI: {plan.bmi} ({plan.category})
-                </p>
-              </div>
+
+              {user && (
+                <Button
+                  onClick={savePlan}
+                  disabled={saving}
+                  className="gradient-calm hover:opacity-90 transition-opacity"
+                >
+                  {saving ? (
+                    "Saving..."
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Plan
+                    </>
+                  )}
+                </Button>
+              )}
             </div>
 
             <div className="grid md:grid-cols-2 gap-6">

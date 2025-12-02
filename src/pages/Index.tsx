@@ -1,14 +1,72 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { FitnessPlanner } from "@/components/FitnessPlanner";
 import { AIChat } from "@/components/AIChat";
-import { Activity, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Activity, Sparkles, LogIn, LogOut, History } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
 
 const Index = () => {
+  const navigate = useNavigate();
+  const [user, setUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-hero opacity-10"></div>
         <div className="relative container mx-auto px-4 py-16">
+          <div className="flex justify-end gap-2 mb-8">
+            {user ? (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/history")}
+                  className="gap-2"
+                >
+                  <History className="w-4 h-4" />
+                  History
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSignOut}
+                  className="gap-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => navigate("/auth")}
+                className="gap-2"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Button>
+            )}
+          </div>
+
           <div className="text-center space-y-6 mb-12">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
               <Sparkles className="w-4 h-4 text-primary" />
@@ -23,6 +81,14 @@ const Index = () => {
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
               Get personalized workout plans, nutrition guidance, and AI-powered coaching to reach your fitness goals
             </p>
+
+            {user && (
+              <div className="inline-block px-4 py-2 rounded-full bg-primary/5 border border-primary/10">
+                <p className="text-sm">
+                  Welcome back, <span className="font-semibold text-primary">{user.email}</span>
+                </p>
+              </div>
+            )}
 
             <div className="flex items-center justify-center gap-8 pt-6">
               <div className="text-center">
@@ -55,7 +121,7 @@ const Index = () => {
               </div>
               <h2 className="text-3xl font-bold">Fitness Planner</h2>
             </div>
-            <FitnessPlanner />
+            <FitnessPlanner user={user} />
           </div>
 
           {/* AI Chat - Takes 1 column */}
