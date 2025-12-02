@@ -29,6 +29,7 @@ export type Database = {
           goal: string | null
           height: number | null
           id: string
+          medical_records: string[] | null
           name: string | null
           notes: Json | null
           user_id: string
@@ -48,6 +49,7 @@ export type Database = {
           goal?: string | null
           height?: number | null
           id?: string
+          medical_records?: string[] | null
           name?: string | null
           notes?: Json | null
           user_id: string
@@ -67,6 +69,7 @@ export type Database = {
           goal?: string | null
           height?: number | null
           id?: string
+          medical_records?: string[] | null
           name?: string | null
           notes?: Json | null
           user_id?: string
