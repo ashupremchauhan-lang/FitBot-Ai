@@ -10,6 +10,7 @@ import { Dumbbell, Activity, Apple, Heart, Sparkles, Save } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { MedicalRecordUpload } from "./MedicalRecordUpload";
 
 interface FitnessPlan {
   bmi: number;
@@ -48,6 +49,7 @@ export const FitnessPlanner = ({ user }: FitnessPlannerProps) => {
   const [plan, setPlan] = useState<FitnessPlan | null>(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [medicalRecords, setMedicalRecords] = useState<string[]>([]);
 
   const calculateBMI = (weight: number, height: number) => {
     const heightM = height / 100;
@@ -213,6 +215,7 @@ export const FitnessPlanner = ({ user }: FitnessPlannerProps) => {
         exercises: plan.exercises,
         diet_plan: plan.diet,
         notes: plan.notes,
+        medical_records: medicalRecords,
       });
 
       if (error) throw error;
@@ -388,6 +391,11 @@ export const FitnessPlanner = ({ user }: FitnessPlannerProps) => {
               />
             </div>
           </div>
+
+          <MedicalRecordUpload
+            onUploadComplete={setMedicalRecords}
+            existingRecords={medicalRecords}
+          />
 
           <Button 
             onClick={generatePlan} 

@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History as HistoryIcon, Dumbbell, Apple, ArrowLeft, Trash2, Loader2 } from "lucide-react";
+import { History as HistoryIcon, Dumbbell, Apple, ArrowLeft, Trash2, Loader2, FileText } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -24,6 +24,7 @@ interface FitnessPlan {
   exercises: string[];
   diet_plan: string[];
   notes: string[];
+  medical_records?: string[];
   created_at: string;
 }
 
@@ -244,6 +245,23 @@ const History = () => {
                     </ScrollArea>
                   </div>
                 </div>
+
+                {plan.medical_records && plan.medical_records.length > 0 && (
+                  <div className="mt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                      <FileText className="w-4 h-4 text-accent" />
+                      <h4 className="font-semibold">Medical Records</h4>
+                    </div>
+                    <div className="space-y-2">
+                      {plan.medical_records.map((record, idx) => (
+                        <Card key={idx} className="p-2 flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm truncate">{record.split('/').pop()}</span>
+                        </Card>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </Card>
             ))}
           </div>
