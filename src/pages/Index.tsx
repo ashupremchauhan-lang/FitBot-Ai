@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { FitnessPlanner } from "@/components/FitnessPlanner";
 import { AIChat } from "@/components/AIChat";
 import { Button } from "@/components/ui/button";
-import { Activity, Sparkles, LogIn, LogOut, History } from "lucide-react";
+import { Activity, Sparkles, LogIn, LogOut, History, TrendingUp } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 const Index = () => {
@@ -38,6 +38,14 @@ const Index = () => {
           <div className="flex justify-end gap-2 mb-8">
             {user ? (
               <>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/progress")}
+                  className="gap-2"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  Progress
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => navigate("/history")}
