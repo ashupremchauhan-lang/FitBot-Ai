@@ -145,7 +145,7 @@ const Index = () => {
       <footer className="border-t bg-card">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-sm text-muted-foreground">
-            <p className="mb-2">Your personal AI fitness coach, available 24/7 <br> © 2025 Your Brand. All rights reserved.</p>
+            <p className="mb-2">Your personal AI fitness coach, available 24/7 </p>
                  </div>
         </div>
       </footer>
