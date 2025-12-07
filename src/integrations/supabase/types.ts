@@ -98,6 +98,53 @@ export type Database = {
         }
         Relationships: []
       }
+      workout_logs: {
+        Row: {
+          calories_burned: number | null
+          created_at: string
+          duration_minutes: number | null
+          exercises_completed: Json
+          fitness_plan_id: string | null
+          id: string
+          mood: string | null
+          notes: string | null
+          user_id: string
+          workout_date: string
+        }
+        Insert: {
+          calories_burned?: number | null
+          created_at?: string
+          duration_minutes?: number | null
+          exercises_completed?: Json
+          fitness_plan_id?: string | null
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          user_id: string
+          workout_date?: string
+        }
+        Update: {
+          calories_burned?: number | null
+          created_at?: string
+          duration_minutes?: number | null
+          exercises_completed?: Json
+          fitness_plan_id?: string | null
+          id?: string
+          mood?: string | null
+          notes?: string | null
+          user_id?: string
+          workout_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workout_logs_fitness_plan_id_fkey"
+            columns: ["fitness_plan_id"]
+            isOneToOne: false
+            referencedRelation: "fitness_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
