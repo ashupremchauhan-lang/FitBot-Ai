@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# Welcome to AI BASEED PERSONALIZED FITNESS AND LIFETYLE project
 
 ## Project info
 
