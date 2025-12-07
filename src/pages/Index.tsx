@@ -146,9 +146,7 @@ const Index = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="text-center text-sm text-muted-foreground">
             <p className="mb-2">Your personal AI fitness coach, available 24/7</p>
-            <p className="flex items-center justify-center gap-2">
-              Made with <span className="text-red-500">♥</span> using AI technology
-            </p>
+            
           </div>
         </div>
       </footer>
