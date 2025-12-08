@@ -16,7 +16,7 @@ export const AIChat = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm FitBot, your AI fitness coach. Ask me anything about workouts, nutrition, or health! 💪"
+      content: "Hey! I'm FitBot. Ask me about workouts, nutrition, or fitness goals."
     }
   ]);
   const [input, setInput] = useState("");
