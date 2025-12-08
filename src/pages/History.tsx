@@ -27,6 +27,13 @@ interface FitnessPlan {
   medical_records?: string[] | null;
   created_at: string;
 }
+// Helper function to safely convert JSONB data to array
+const toArray = (data: any): any[] => {
+  if (Array.isArray(data)) return data;
+  if (data === null || data === undefined) return [];
+  if (typeof data === 'object') return Object.values(data);
+  return [data];
+};
 
 const History = () => {
   const navigate = useNavigate();
@@ -218,7 +225,7 @@ const History = () => {
                     </div>
                     <ScrollArea className="h-32">
                       <ul className="space-y-1">
-                        {(plan.exercises ?? []).map((exercise, idx) => (
+                        {toArray(plan.exercises).map((exercise, idx) => (
                           <li key={idx} className="text-sm flex items-start gap-2">
                             <span className="text-primary">•</span>
                             <span>{typeof exercise === 'string' ? exercise : JSON.stringify(exercise)}</span>
@@ -235,7 +242,7 @@ const History = () => {
                     </div>
                     <ScrollArea className="h-32">
                       <ul className="space-y-1">
-                        {(plan.diet_plan ?? []).map((meal, idx) => (
+                        {toArray(plan.diet_plan).map((meal, idx) => (
                           <li key={idx} className="text-sm flex items-start gap-2">
                             <span className="text-secondary">•</span>
                             <span>{typeof meal === 'string' ? meal : JSON.stringify(meal)}</span>
